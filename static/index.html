@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Social Media Poster</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 20px;
+            border: 3px solid #eee;
+            border-radius: 15px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .mode-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .mode-btn.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .mode-btn h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .mode-btn p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .input-section {
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        .input-section.active {
+            display: block;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .file-upload {
+            width: 100%;
+            padding: 40px;
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+
+        .file-upload.has-file {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .preview-section {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: #f9fafb;
+            border-radius: 15px;
+        }
+
+        .preview-section.active {
+            display: block;
+        }
+
+        .preview-image {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto 20px;
+            display: block;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .caption-preview {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .caption-preview h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .post-btn {
+            background: #10b981;
+            color: white;
+        }
+
+        .post-btn:hover {
+            background: #059669;
+        }
+
+        .edit-btn {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .edit-btn:hover {
+            background: #d97706;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 AI Social Media Poster</h1>
+        <p class="subtitle">Generate professional posts for Instagram & Facebook</p>
+
+        <!-- Mode Selection -->
+        <div class="mode-selector">
+            <div class="mode-btn active" onclick="selectMode('advertisement')" id="adMode">
+                <h3>📢 Advertisement</h3>
+                <p>Generate product images from text</p>
+            </div>
+            <div class="mode-btn" onclick="selectMode('general')" id="generalMode">
+                <h3>📸 General Post</h3>
+                <p>Upload & enhance your images</p>
+            </div>
+        </div>
+
+        <!-- Advertisement Input -->
+        <div class="input-section active" id="advertisementInput">
+            <label for="productDesc">Describe your product:</label>
+            <textarea
+                id="productDesc"
+                placeholder="Example: Red summer dress, flowy fabric, perfect for beach parties, elegant design"
+            ></textarea>
+        </div>
+
+        <!-- General Post Input -->
+        <div class="input-section" id="generalInput">
+            <label>Upload your image:</label>
+            <div class="file-upload" onclick="document.getElementById('imageUpload').click()">
+                <p id="uploadText">📁 Click to upload image</p>
+            </div>
+            <input type="file" id="imageUpload" accept="image/*" onchange="handleFileSelect(event)">
+
+            <label for="editInstructions" style="margin-top: 20px;">How should we enhance it? (optional):</label>
+            <textarea
+                id="editInstructions"
+                placeholder="Example: Make it brighter, add professional lighting, remove background"
+            ></textarea>
+        </div>
+
+        <!-- Generate Button -->
+        <button class="generate-btn" onclick="generatePost()" id="generateBtn">
+            ✨ Generate Post
+        </button>
+
+        <!-- Loading State -->
+        <div class="loading" id="loadingState" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>AI is working its magic... ⏳</p>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="preview-section" id="previewSection">
+            <img id="previewImage" class="preview-image" src="" alt="Generated image">
+
+            <div class="caption-preview">
+                <h4>Caption:</h4>
+                <p id="captionText"></p>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn edit-btn" onclick="editPost()">✏️ Edit</button>
+                <button class="action-btn post-btn" onclick="postToSocial()">🚀 Post to Social Media</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let currentMode = 'advertisement';
+        let uploadedFile = null;
+
+        function selectMode(mode) {
+            currentMode = mode;
+
+            // Update button styles
+            document.getElementById('adMode').classList.remove('active');
+            document.getElementById('generalMode').classList.remove('active');
+
+            if (mode === 'advertisement') {
+                document.getElementById('adMode').classList.add('active');
+            } else {
+                document.getElementById('generalMode').classList.add('active');
+            }
+
+            // Show/hide inputs
+            document.getElementById('advertisementInput').classList.remove('active');
+            document.getElementById('generalInput').classList.remove('active');
+
+            if (mode === 'advertisement') {
+                document.getElementById('advertisementInput').classList.add('active');
+            } else {
+                document.getElementById('generalInput').classList.add('active');
+            }
+
+            // Hide preview
+            document.getElementById('previewSection').classList.remove('active');
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                uploadedFile = file;
+                document.getElementById('uploadText').textContent = `✅ ${file.name}`;
+                document.querySelector('.file-upload').classList.add('has-file');
+            }
+        }
+
+        async function generatePost() {
+            // Validate input
+            if (currentMode === 'advertisement') {
+                const desc = document.getElementById('productDesc').value.trim();
+                if (!desc) {
+                    alert('Please describe your product!');
+                    return;
+                }
+            } else {
+                if (!uploadedFile) {
+                    alert('Please upload an image!');
+                    return;
+                }
+            }
+
+            // Show loading
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('previewSection').classList.remove('active');
+
+            // We'll add API call tomorrow
+            // For now, just simulate
+            setTimeout(() => {
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('generateBtn').disabled = false;
+                alert('Backend connection works! Tomorrow we add AI 🚀');
+            }, 2000);
+        }
+
+        function editPost() {
+            document.getElementById('previewSection').classList.remove('active');
+        }
+
+        function postToSocial() {
+            alert('Posting feature coming soon! 🎉');
+        }
+    </script>
+</body>
+</html>
