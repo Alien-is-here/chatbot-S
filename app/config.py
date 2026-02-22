@@ -242,3 +242,47 @@ if __name__ == "__main__":
     print(f"Testing settings access:")
     print(f"OpenAI Key (first 10 chars): {s.openai_api_key[:10]}...")
     print(f"Enabled platforms: {s.get_enabled_platforms()}")
+
+# ============================================
+# DATABASE CONFIGURATION
+# ============================================
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+from contextlib import contextmanager
+import os
+
+# Build the PostgreSQL connection URL from your .env file
+# Think of this like the restaurant's address so the waiter knows where the kitchen is
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:password@localhost:5432/chatbot_db"  # default fallback
+)
+
+# Engine = the actual connection to PostgreSQL (like opening the kitchen door)
+engine = create_engine(DATABASE_URL, echo=settings.debug)
+
+# SessionLocal = a factory that creates database sessions (like giving a waiter their notepad)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+@contextmanager
+def get_db_session() -> Session:
+    """
+    Safe database session.
+    Think of it like: open notepad → do work → save and close notepad.
+    If anything goes wrong → throw away the notepad (rollback).
+    """
+    session = SessionLocal()
+    try:
+        yield session
+        session.commit()   # Save all changes to database
+    except Exception:
+        session.rollback() # Something went wrong → undo everything
+        raise
+    finally:
+        session.close()    # Always close the connection when done
+```
+
+Also add this to your `.env` file:
+```
+DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/chatbot_db

@@ -1,10 +1,4 @@
-"""
-services/social_media.py - Social Media Posting Service
-========================================================
-Handles posting to social media platforms:
-- Instagram (via instagrapi)
-- Facebook (via facebook-sdk)
-"""
+
 
 from instagrapi import Client as InstaClient
 from instagrapi.exceptions import LoginRequired
@@ -12,7 +6,7 @@ import facebook
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 import logging
-from config import get_settings
+from app.config import get_settings
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -60,10 +54,10 @@ class InstagramService:
             return True
 
         except LoginRequired as e:
-            logger.error(f"❌ Instagram login failed: {str(e)}")
+            logger.error(f"Instagram login failed: {str(e)}")
             return False
         except Exception as e:
-            logger.error(f"❌ Instagram login error: {str(e)}")
+            logger.error(f"Instagram login error: {str(e)}")
             return False
 
     def post_photo(

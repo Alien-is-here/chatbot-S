@@ -1,26 +1,18 @@
-"""
-services/image_service.py - Image Processing Service
-====================================================
-Handles all image operations:
-- Download images from URLs
-- Resize and crop images
-- Format conversion
-- Validation
-- File management
-"""
+# This handles downloading , resizing  and saving images. It only processes images that only exists
 
-from PIL import Image
-import requests
-from pathlib import Path
+from PIL import Image # Python Imaging Library
+import requests     # Used to download images over HTTP/HTTPS.
+from pathlib import Path # works cross-platform (Windows/Linux/Mac)
 from typing import Optional, Tuple, Dict, Any
-import logging
+import logging  # info , warnings, errors
 from io import BytesIO
 import uuid
 import sys
+from app.config import get_settings # loads global app configuration
+
 
 # Add parent directory to path so we can import config
 sys.path.append(str(Path(__file__).parent.parent))
-from config import get_settings
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -39,28 +31,17 @@ class ImageService:
         self.images_dir = self.settings.images_dir
         self.temp_dir = self.settings.temp_dir
 
-    # ============================================
-    # DOWNLOAD & SAVE
-    # ============================================
+# ------------------------------- Downloading Images ----------------------------------------------------
+
 
     def download_image(self, url: str, save_name: Optional[str] = None) -> Path:
-        """
-        Download an image from a URL.
-
-        Args:
-            url: Image URL (e.g., from DALL-E generation)
-            save_name: Optional custom filename (auto-generated if not provided)
-
-        Returns:
-            Path to saved image file
-
-        Example:
+       """ Example:
             path = image_service.download_image(
                 "https://oaidalleapiprodscus.blob.core.windows.net/...",
                 "product_nike_shoes.jpg"
             )
         """
-        logger.info(f"Downloading image from: {url[:50]}...")
+        logger.info(f"Downloading image from: {url[:50]}...") # Logs first 50 characters
 
         try:
             # Download image
@@ -83,8 +64,8 @@ class ImageService:
 
             # Convert RGBA to RGB if saving as JPEG
             if save_name.lower().endswith(('.jpg', '.jpeg')):
-                if image.mode in ('RGBA', 'LA', 'P'):
-                    # Create white background
+                if image.mode in ('RGBA', 'LA', 'P'): # (RGBA + Alpha, Grayscale + alpha , palette mode)
+                    # Create the white background
                     background = Image.new('RGB', image.size, (255, 255, 255))
                     if image.mode == 'P':
                         image = image.convert('RGBA')
@@ -96,32 +77,24 @@ class ImageService:
             # Save image
             image.save(save_path, quality=95, optimize=True)
 
-            logger.info(f"✓ Image saved to: {save_path}")
+            logger.info(f"Image is saved to: {save_path}")
             return save_path
 
         except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Failed to download image: {str(e)}")
+            logger.error(f"Failed to download image: {str(e)}")
             raise Exception(f"Failed to download image: {str(e)}")
         except Exception as e:
-            logger.error(f"❌ Failed to process image: {str(e)}")
+            logger.error(f"Failed to process image: {str(e)}")
             raise Exception(f"Failed to process image: {str(e)}")
 
+# ------------------------------- Saving Images ----------------------------------------------------
+
     def save_uploaded_image(self, file_data: bytes, filename: str) -> Path:
-        """
-        Save an uploaded image file.
-
-        Args:
-            file_data: Raw file bytes
-            filename: Original filename
-
-        Returns:
-            Path to saved file
-        """
         logger.info(f"Saving uploaded image: {filename}")
 
         try:
             # Open and validate image
-            image = Image.open(BytesIO(file_data))
+            image = Image.open(BytesIO(file_data)) # File is in image forn not random bytes
 
             # Generate unique filename
             ext = Path(filename).suffix.lower()
@@ -144,37 +117,21 @@ class ImageService:
 
             image.save(save_path, quality=95, optimize=True)
 
-            logger.info(f"✓ Uploaded image saved: {save_path}")
+            logger.info(f"Uploaded image saved: {save_path}")
             return save_path
 
         except Exception as e:
-            logger.error(f"❌ Failed to save uploaded image: {str(e)}")
+            logger.error(f"Failed to save uploaded image: {str(e)}")
             raise Exception(f"Failed to save image: {str(e)}")
 
-    # ============================================
-    # RESIZE & CROP
-    # ============================================
+# ------------------------------- Resizing Images ----------------------------------------------------
 
     def resize_for_instagram(
         self,
         image_path: Path,
         aspect_ratio: str = "1:1"  # "1:1", "4:5", "16:9"
     ) -> Path:
-        """
-        Resize image to Instagram specifications.
-
-        Instagram requirements:
-        - Square (1:1): 1080x1080
-        - Portrait (4:5): 1080x1350
-        - Landscape (16:9): 1080x608
-
-        Args:
-            image_path: Path to image
-            aspect_ratio: Desired aspect ratio
-
-        Returns:
-            Path to resized image
-        """
+       
         logger.info(f"Resizing image for Instagram ({aspect_ratio})")
 
         # Define target dimensions
@@ -218,23 +175,16 @@ class ImageService:
             resized_path = self.temp_dir / f"resized_{image_path.name}"
             image.save(resized_path, quality=95, optimize=True)
 
-            logger.info(f"✓ Image resized to {target_size}")
+            logger.info(f"Image resized to {target_size}")
             return resized_path
 
         except Exception as e:
-            logger.error(f"❌ Failed to resize image: {str(e)}")
+            logger.error(f"Failed to resize image: {str(e)}")
             raise Exception(f"Failed to resize image: {str(e)}")
 
+
     def resize_for_facebook(self, image_path: Path) -> Path:
-        """
-        Resize image for Facebook (optimal: 1200x630).
 
-        Args:
-            image_path: Path to image
-
-        Returns:
-            Path to resized image
-        """
         logger.info("Resizing image for Facebook")
 
         target_size = (1200, 630)
@@ -267,27 +217,15 @@ class ImageService:
             resized_path = self.temp_dir / f"fb_{image_path.name}"
             image.save(resized_path, quality=95, optimize=True)
 
-            logger.info("✓ Image resized for Facebook")
+            logger.info("Image resized for Facebook")
             return resized_path
 
         except Exception as e:
-            logger.error(f"❌ Failed to resize for Facebook: {str(e)}")
+            logger.error(f"Failed to resize for Facebook: {str(e)}")
             raise Exception(f"Failed to resize image: {str(e)}")
 
-    # ============================================
-    # VALIDATION
-    # ============================================
-
+ # ------------------------------- Validating Images ----------------------------------------------------
     def validate_image(self, image_path: Path) -> Dict[str, Any]:
-        """
-        Validate image meets requirements.
-
-        Args:
-            image_path: Path to image
-
-        Returns:
-            Dictionary with validation results
-        """
         try:
             image = Image.open(image_path)
             file_size = image_path.stat().st_size
@@ -328,25 +266,23 @@ class ImageService:
                 )
 
             if result["valid"]:
-                logger.info(f"✓ Image validation passed: {image.width}x{image.height}")
+                logger.info(f"Image validation passed: {image.width}x{image.height}")
             else:
-                logger.warning(f"⚠️  Image validation failed: {', '.join(result['issues'])}")
+                logger.warning(f"Image validation failed: {', '.join(result['issues'])}")
 
             return result
 
         except Exception as e:
-            logger.error(f"❌ Image validation error: {str(e)}")
+            logger.error(f"Image validation error: {str(e)}")
             return {
                 "valid": False,
                 "issues": [f"Failed to validate image: {str(e)}"]
             }
 
-    # ============================================
-    # UTILITIES
-    # ============================================
+# ------------------------------- Information (Utilities) of Images ----------------------------------------------------
 
     def get_image_info(self, image_path: Path) -> Dict[str, Any]:
-        """Get detailed information about an image"""
+        # Get detailed information about an image
         try:
             image = Image.open(image_path)
             file_size = image_path.stat().st_size
@@ -362,11 +298,13 @@ class ImageService:
                 "size_mb": round(file_size / (1024 * 1024), 2)
             }
         except Exception as e:
-            logger.error(f"❌ Failed to get image info: {str(e)}")
+            logger.error(f"Failed to get image info: {str(e)}")
             raise Exception(f"Failed to get image info: {str(e)}")
 
+# ------------------------------- Cleaning----------------------------------------------------
+
     def cleanup_temp_files(self):
-        """Delete all temporary files"""
+        # Delete all temporary files
         count = 0
         for file in self.temp_dir.glob("*"):
             if file.is_file():
@@ -377,19 +315,17 @@ class ImageService:
         return count
 
 
-# ============================================
-# SINGLETON INSTANCE
-# ============================================
+# ------------------------------- Instance ----------------------------------------------------
+
 
 image_service = ImageService()
 
 
-# ============================================
-# CONVENIENCE FUNCTIONS
-# ============================================
+# ------------------------------- Convenience Functions ----------------------------------------------------
+
 
 def download_image(*args, **kwargs):
-    """Convenience function for downloading images"""
+    # Convenience function for downloading images
     return image_service.download_image(*args, **kwargs)
 
 
@@ -403,10 +339,9 @@ def validate_image(*args, **kwargs):
     return image_service.validate_image(*args, **kwargs)
 
 
-# ============================================
-# TESTING
-# ============================================
+# ------------------------------- Testing Images ----------------------------------------------------
 
+"""
 if __name__ == "__main__":
     print("\n" + "="*60)
     print("🖼️  Image Service Test")
@@ -426,4 +361,5 @@ if __name__ == "__main__":
     print("  - Validate images ✓")
     print("  - Process uploads ✓")
 
-    print("="*60 + "\n")
+    print("="*60 + "\n") 
+    """
